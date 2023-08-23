@@ -43,6 +43,7 @@ class LineBotInfo(object):
         self.line_bot_api = LineBotApi(access_token)
         self.handler = WebhookHandler(secret)
         self.message_queue = Queue()
+        self.switch_to_human = False
 
 
 
