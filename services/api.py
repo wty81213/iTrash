@@ -8,8 +8,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from dotenv import load_dotenv
 
-from services.utils.utils import answer_response
-
+from services.utils.utils import answer_response, read_json_file
 
 api_info = ApiInfo()
 app = api_info.app
@@ -26,9 +25,10 @@ api = api_info.api
 class AllClasses(Resource):
     # @api.marshal_with(cat)
     def get(self):
-        with open("config/config.json", "r") as f:
-            classes = json.load(f)["classes"]
-        return classes
+        content = read_json_file("classes")
+        # with open("config/config.json", "r") as f:
+        #     classes = json.load(f)["classes"]
+        return content
 
 
 @api_info.ns.route('/class/<string:id>')
