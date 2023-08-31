@@ -17,9 +17,9 @@ from services.utils.utils import answer_response, question_options, is_user_inac
 line_bot = LineBotInfo()
 app = line_bot.app
 line_bot_api = line_bot.line_bot_api
-last_input_time = line_bot.last_input_time
-inactive_threshold = line_bot.inactive_threshold
-message_queue = line_bot.message_queue
+# last_input_time = line_bot.last_input_time
+# inactive_threshold = line_bot.inactive_threshold
+# message_queue = line_bot.message_queue
 last_id = ""
 input_message = ""
 
@@ -29,10 +29,7 @@ last_message_time = {}
 line_bot_api_new = LineBotApi('znGqCb0IVXqlwW/3a4ZLfO9IQVvSvcN8MV5RjzG9Rs4dmqL+qLt8eEn1W2oIXQr3UnT+Q0QQ+i2KR+bnGbPO0T3SqGuIz6dZ1n5TJyZEgsuLPZYYGe60ZyKXTqhFGYUqsh7KVcW06VOYk6lnjm7gwQdB04t89/1O/w1cDnyilFU=')
 handler_new = WebhookHandler('94d708d169f17c9cca0cfc4d8c22b668')
 
-# with open("config/config.json", "r") as f:
-#         content = json.load(f)
-#         no_id_list = content["no_id_list"]
-#         human_customer_service = content["human_customer_service"]
+
 
 
 
@@ -76,11 +73,16 @@ def people_handle_message(event):
 @line_bot.handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
 
-    
+    user_id = event.source.user_id
 
-    if not line_bot.switch_to_human:
+    if user_id not in line_bot.user_pool:
+        line_bot.init_user_info(user_id)
 
-        user_id = event.source.user_id
+    # print("user_pool: ", line_bot.user_pool)
+
+
+    # if not line_bot.switch_to_human:
+    if not line_bot.user_pool[user_id]["switch_to_human"]:
 
         # global last_input_time
         global last_id
@@ -101,15 +103,21 @@ def handle_message(event):
             last_time = current_time
 
         last_message_time[user_id] = current_time
+       
 
         # check if the user want to change to human customer service
         if is_change_to_human_customer_service(mtext):
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text="請稍等，我將為您轉接至客服人員。")
-            )
+            # line_bot_api.reply_message(
+            #     event.reply_token,
+            #     TextSendMessage(text="請稍等，我將為您轉接至客服人員。")
+            # )
 
-            line_bot.switch_to_human = True
+            line_bot_api.push_message(user_id, TextSendMessage(text="請稍等，我將為您轉接至客服人員。"))
+
+            # line_bot.switch_to_human = True
+
+            line_bot.user_pool[user_id]["switch_to_human"] = True
+
         
         else:
             match (mtext):
@@ -160,12 +168,21 @@ def handle_message(event):
                 case _:
                     # check time interval and model predict
                     if is_skip_predict(last_time, current_time) and not is_change_to_human_customer_service(mtext) :
-                        message_queue.put(mtext)
+                        print("skip!!!!!!!!!!!")
+
+
+                        # message_queue.put(mtext)
+
+                        line_bot.user_pool[user_id]["message_queue"].put(mtext)
                         return 
                     else:
-                        message_queue.put(mtext)
-                        while not message_queue.empty():
-                            input_message += message_queue.get()
+                        # message_queue.put(mtext)
+                        line_bot.user_pool[user_id]["message_queue"].put(mtext)
+
+                        # while not message_queue.empty():
+                        while not line_bot.user_pool[user_id]["message_queue"].empty():
+                            # input_message += message_queue.get()
+                            input_message += line_bot.user_pool[user_id]["message_queue"].get()
 
                         # id, class_content = model.predict(input_message)
                         id = "TQ005"
@@ -174,7 +191,8 @@ def handle_message(event):
 
             # clear queue when there is an answer
             if id != "TQ005":
-                clear_queue(message_queue)
+                # clear_queue(message_queue)
+                clear_queue(line_bot.user_pool[user_id]["message_queue"])
 
                 
 
@@ -197,7 +215,11 @@ def handle_message(event):
 
             last_id = id if id != "" else last_id
             
-            line_bot.last_input_time = current_time
+            # line_bot.last_input_time = current_time
+            line_bot.user_pool[user_id]["last_input_time"] = current_time
+
+
+           
 
 
             try:
@@ -205,8 +227,6 @@ def handle_message(event):
                 if mtext == "機台垃圾已滿載": 
                     message = yes_no_message(answer_response(id))
 
-                   
-                    
                 else: 
                     message = TextSendMessage(
                         text = text,
@@ -255,22 +275,32 @@ def handle_message(event):
                         # print("-----------------------")
                     
                     if is_change_to_human_customer_service(text):
-                        line_bot.switch_to_human = True
+                        # line_bot.switch_to_human = True
+                        line_bot.user_pool[user_id]["switch_to_human"] = True
+                        
 
-                    line_bot_api.reply_message(event.reply_token, message)
+                    # line_bot_api.reply_message(event.reply_token, message)
+                    line_bot_api.push_message(user_id, message)
 
             except  Exception as e:
-                print("error: ", e)
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text = "發生錯誤!!"))
+                # print("error: ", e)
+                # line_bot_api.reply_message(event.reply_token, TextSendMessage(text = "發生錯誤!!"))
+                line_bot_api.push_message(user_id, TextSendMessage(text = "發生錯誤!!"))
+
     
 
     else:
         if event.message.text == "機器人回覆":
-            line_bot_api.reply_message(
-                event.reply_token,
+            # line_bot_api.reply_message(
+            #     event.reply_token,
+            #     TextSendMessage(text="請稍等，我將為您換成機器人回覆。")
+            # )
+            line_bot_api.push_message(
+                user_id,
                 TextSendMessage(text="請稍等，我將為您換成機器人回覆。")
             )
-            line_bot.switch_to_human = False
+            # line_bot.switch_to_human = False
+            line_bot.user_pool[user_id]["switch_to_human"] = False
 
 
 def run_line_bot():

@@ -37,14 +37,25 @@ class LineBotInfo(object):
         secret = os.getenv("CHANNEL_SECRET")
         # self.api = Api(self.app, title='Line Bot', description='Line Bot')
         # self.ns = self.api.namespace('iTrash', description='iTrash Api')
-        self.first_time_chat = True
-        self.inactive_threshold = 30
-        self.last_input_time = time.time()
+        self.user_pool = {}
+        # self.first_time_chat = True
+        # self.inactive_threshold = 30
+        # self.last_input_time = time.time()
         self.line_bot_api = LineBotApi(access_token)
         self.handler = WebhookHandler(secret)
-        self.message_queue = Queue()
-        self.switch_to_human = False
-
+        # self.message_queue = Queue()
+        # self.switch_to_human = False
+    
+    def init_user_info(self, user_id):
+        self.user_pool = {
+            user_id: {
+                'first_time_chat': True, 
+                'inactive_threshold': 30,
+                'last_input_time': time.time(),
+                'message_queue': Queue(),
+                'switch_to_human': False
+            }  
+    }
 
 
 
