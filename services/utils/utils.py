@@ -1,10 +1,11 @@
 import json
 import time
 import os
+from queue import Queue
 
 NUM_CLASSES = 20
 
-IS_HUMAN_REPLY_ACTIVE_LIST = ["請稍候，我們將盡速為您服務，不好意思造成您的不便", "真人客服", "真人回覆", "請稍候，將由真人客服為您排除機台異常"]
+IS_HUMAN_REPLY_ACTIVE_LIST = ["請稍候，我們將盡速為您服務", "真人客服", "真人回覆", "請稍候，將由真人客服為您排除機台異常", "我們將盡速為您服務"]
                                                                                                
 # /Users/wty81213/Documents/project/ML/iTrash/services/utils/utils.py
 with open(os.getcwd() + "/config/config.json", "r") as f:
@@ -59,7 +60,11 @@ def read_json_file(key):
 
 
 def is_change_to_human_customer_service(text):
-    return text in IS_HUMAN_REPLY_ACTIVE_LIST
+    for str in IS_HUMAN_REPLY_ACTIVE_LIST:
+        if str in text:
+            return True
+    
+    return False
     #  return text == "請稍候，我們將盡速為您服務，不好意思造成您的不便" or "真人客服" in text
 
 
@@ -82,6 +87,19 @@ def is_skip_predict(last_input_time, current_time, time_interval=30):
 def clear_queue(queue):
     while not queue.empty():
         queue.get()
+
+
+# def init_user_info(line_bot, user_id):
+#     line_bot.user_info = {
+#         user_id: {
+#             'first_time_chat': True, 
+#             'inactive_threshold': 30,
+#             'last_input_time': time.time(),
+#             'message_queue': Queue(),
+#             'switch_to_human': False
+#         },
+        
+#     }
 
 
 
