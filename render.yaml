@@ -3,8 +3,8 @@ services:
   name: line-bot-python-flask
   env: python
   repo: https://github.com/wty81213/iTrash.git
-  buildCommand: cd ./;pip install gunicorn -r requirements.txt
-  startCommand: cd ./;gunicorn main:app
+  buildCommand: pip install gunicorn -r requirements.txt
+  startCommand: gunicorn main:app
   plan: free
   autoDeploy: false
   envVars:
