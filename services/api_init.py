@@ -14,8 +14,6 @@ from ..model import BertForSequenceClassifier
 load_dotenv()
 
 
-
-
 class ApiInfo(object): 
     _instance = None
     def __new__(cls, *args, **kwargs):
