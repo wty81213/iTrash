@@ -11,10 +11,11 @@ from services.api_init import ApiInfo, LineBotInfo
 from dotenv import load_dotenv
 from flask import request, abort
 
-from services.utils.utils import answer_response, question_options, is_user_inactive, is_skip_predict, read_json_file, is_change_to_human_customer_service, clear_queue
+from services.utils.utils import answer_response, question_options, is_user_inactive, is_skip_predict, read_json_file, is_change_to_human_customer_service, clear_queue, main_for_intent_recognition
 
 
 line_bot = LineBotInfo()
+
 app = line_bot.app
 line_bot_api = line_bot.line_bot_api
 # last_input_time = line_bot.last_input_time
@@ -28,8 +29,6 @@ last_message_time = {}
 
 line_bot_api_new = LineBotApi('znGqCb0IVXqlwW/3a4ZLfO9IQVvSvcN8MV5RjzG9Rs4dmqL+qLt8eEn1W2oIXQr3UnT+Q0QQ+i2KR+bnGbPO0T3SqGuIz6dZ1n5TJyZEgsuLPZYYGe60ZyKXTqhFGYUqsh7KVcW06VOYk6lnjm7gwQdB04t89/1O/w1cDnyilFU=')
 handler_new = WebhookHandler('94d708d169f17c9cca0cfc4d8c22b668')
-
-
 
 
 
@@ -72,6 +71,8 @@ def people_handle_message(event):
 
 @line_bot.handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+
+    matching_station = []
 
     user_id = event.source.user_id
 
@@ -172,7 +173,6 @@ def handle_message(event):
 
 
                         # message_queue.put(mtext)
-
                         line_bot.user_pool[user_id]["message_queue"].put(mtext)
                         return 
                     else:
@@ -183,43 +183,65 @@ def handle_message(event):
                         while not line_bot.user_pool[user_id]["message_queue"].empty():
                             # input_message += message_queue.get()
                             input_message += line_bot.user_pool[user_id]["message_queue"].get()
+                            input_message += ','
 
-                        # id, class_content = model.predict(input_message)
-                        id = "TQ005"
+                        
+                        # model predict
+                        predictive_problem, matching_station = main_for_intent_recognition(input_message, line_bot.config)
+                        id = predictive_problem[0].split('_')[0]
+
+                        print('clear message queue...')
+                        clear_queue(line_bot.user_pool[user_id]["message_queue"])
+
+                        # print('matching_station: ', matching_station)
                     
                     print("input_message: ", input_message)
 
             # clear queue when there is an answer
-            if id != "TQ005":
-                # clear_queue(message_queue)
-                clear_queue(line_bot.user_pool[user_id]["message_queue"])
+
+            print('id: ', id)
+            # if id != "SQ016":
+            #     # clear_queue(message_queue)
+            #     print('clear message queue...')
+            #     clear_queue(line_bot.user_pool[user_id]["message_queue"])
 
                 
-
+            # check if the matching_station is empty
+            if len(matching_station[0]) == 0:
             # if the user click the answer which has no id in the config.json, ex: subclasses: [{"name": "瑞陽站", type": "單一式回覆","content": "您好，請先確認是否為PET1寶特瓶或鐵鋁罐。無誤的話條碼今日會建檔，待系統凌晨更新，明天可回收。請留意，瓶罐請不要擠壓，以免影響條碼辨識，謝謝" }]
-            if id == "" and last_id != "":
-                resp = answer_response(last_id)
-                subclasses = resp["subclasses"]
-                match_subclasses = list(filter(lambda x: x["name"] == mtext, subclasses))[0]
-                text = match_subclasses["content"]
-                print("match_subclasses: ", match_subclasses)
-                options = list(filter(lambda x: x["name"] == mtext, subclasses))[0]["subclasses"] if "subclasses" in match_subclasses else []
+                if id == "" and last_id != "":
+                    resp = answer_response(last_id)
+                    subclasses = resp["subclasses"]
+                    match_subclasses = list(filter(lambda x: x["name"] == mtext, subclasses))[0]
+                    text = match_subclasses["content"]
+                    print("match_subclasses: ", match_subclasses)
+                    options = list(filter(lambda x: x["name"] == mtext, subclasses))[0]["subclasses"] if "subclasses" in match_subclasses else []
 
-                print('options: ', options)
-                    
-            else:
-                # if last_id == "SQ012":
-                text = answer_response(id)["content"]
-                options = answer_response(id)["subclasses"] 
+                    print('options: ', options)
+                        
+                else:
+                    # if last_id == "SQ012":
+                    text = answer_response(id)["content"]
+                    options = answer_response(id)["subclasses"] 
 
 
-            last_id = id if id != "" else last_id
+                last_id = id if id != "" else last_id
+
+            
+            else: 
+                options = []
+                # resp = answer_response(id)
+                text = answer_response(id)["subclasses"][0]['content']
+                # print('id: ', id)
+                # print('text: ', text)
+
+                # os._exit(0)
+
+
+            
             
             # line_bot.last_input_time = current_time
             line_bot.user_pool[user_id]["last_input_time"] = current_time
-
-
-           
 
 
             try:
@@ -235,7 +257,7 @@ def handle_message(event):
                         ) if len(options) else None
                     
                     )
-              
+            
                 
                 # if the text is empty, reply nothing
                 if text:
@@ -286,8 +308,7 @@ def handle_message(event):
                 # print("error: ", e)
                 # line_bot_api.reply_message(event.reply_token, TextSendMessage(text = "發生錯誤!!"))
                 line_bot_api.push_message(user_id, TextSendMessage(text = "發生錯誤!!"))
-
-    
+        
 
     else:
         if event.message.text == "機器人回覆":
