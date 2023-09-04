@@ -85,8 +85,8 @@ class LineBotInfo(object):
 
         ##### handling predict_mapping_info 
         print('===== handling predict_mapping_info =====')
-        problem_mapping_info = pd.read_csv(os.path.join(os.getcwd(), PROBLEM_MAPPING_PATH))
-        position_mapping_info = pd.read_csv(os.path.join(os.getcwd(), POSITION_MAPPING_PATH))
+        problem_mapping_info = pd.read_csv(PROBLEM_MAPPING_PATH)
+        position_mapping_info = pd.read_csv(POSITION_MAPPING_PATH)
 
         problem_mapping_info['value'] = problem_mapping_info['problem_id'] + '_' + problem_mapping_info['problem_name']
         problem_mapping_dict = dict(zip(problem_mapping_info['problem_id'],problem_mapping_info['value']))
