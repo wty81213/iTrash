@@ -1,9 +1,9 @@
-flask-restx==1.1.0
-line-bot-sdk==3.1.0
+flask-restx
+line-bot-sdk
 numpy
 pandas
-torch==2.0.1
-torchaudio==2.0.2
-torchvision==0.15.2
-tqdm==4.65.0
-transformers==4.32.1
+torch
+torchaudio
+torchvision
+tqdm
+transformers
