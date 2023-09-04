@@ -4,7 +4,7 @@ services:
   env: python
   repo: https://github.com/wty81213/iTrash.git
   buildCommand: pip install gunicorn -r requirements.txt
-  startCommand: gunicorn main:app
+  startCommand: gunicorn app:app
   plan: free
   autoDeploy: false
   envVars:
