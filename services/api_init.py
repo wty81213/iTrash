@@ -9,7 +9,7 @@ from flask_restx import Api
 from dotenv import load_dotenv
 from linebot import LineBotApi, WebhookHandler
 from ast import literal_eval
-from ..model import BertForSequenceClassifier
+from ..model.bert_model import BertForSequenceClassifier
 
 load_dotenv()
 
