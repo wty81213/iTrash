@@ -14,8 +14,12 @@ from flask_restx import Resource, fields, Api
 def main():
     t1 = threading.Thread(target=line_bot.run_line_bot)
     t2 = threading.Thread(target=api.run_api)
+    t3 = threading.Thread(target=line_bot.timer, args=(10,))
+    
     t1.start()
     t2.start()
+    t3.start()
+    
     
     
 
