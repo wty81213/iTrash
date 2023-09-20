@@ -41,6 +41,7 @@ class LineBotInfo(object):
 
         access_token = os.getenv("ACCESS_TOKEN")
         secret = os.getenv("CHANNEL_SECRET")
+        
         # self.api = Api(self.app, title='Line Bot', description='Line Bot')
         # self.ns = self.api.namespace('iTrash', description='iTrash Api')
         self.user_pool = {}
@@ -56,17 +57,33 @@ class LineBotInfo(object):
         initial_config.read('./config.ini')
 
         self.config = self.pre_work_for_intent_recognition(initial_config)
+
+
+
     
     def init_user_info(self, user_id):
-        self.user_pool = {
-            user_id: {
-                'first_time_chat': True, 
-                'inactive_threshold': 30,
-                'last_input_time': time.time(),
-                'message_queue': Queue(),
-                'switch_to_human': False
-            }  
-    }
+        # self.user_pool = {
+        #     user_id: {
+        #         'first_time_chat': True, 
+        #         'inactive_threshold': 30,
+        #         'last_time': time.time(),
+        #         'current_time': time.time(),
+        #         'message_queue': Queue(),
+        #         'switch_to_human': False,
+        #         'last_id': ''
+        #     }  
+        # }
+        self.user_pool[user_id] = {
+            'first_time_chat': True, 
+            'inactive_threshold': 30,
+            'last_time': time.time(),
+            'current_time': time.time(),
+            'message_queue': Queue(),
+            'switch_to_human': False,
+            'last_id': '',
+            "is_new_conversation": True,
+            # 'no_reply': False,
+        }
         
     def pre_work_for_intent_recognition(self, initial_config):
         # setting parameter 
