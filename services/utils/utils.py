@@ -7,6 +7,7 @@ from tqdm import tqdm
 from queue import Queue
 from ..intention_dataset import IntentionDataset
 from torch.utils.data import DataLoader
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, ImageSendMessage, AudioSendMessage, QuickReply, QuickReplyButton, MessageAction, PostbackAction, TemplateSendMessage, ConfirmTemplate, MessageTemplateAction, FlexSendMessage
 
 NUM_CLASSES = 20
 
@@ -79,16 +80,15 @@ def is_skip_predict(last_input_time, current_time, time_interval=10):
     # print("current_time: ", current_time)
 
     # print("last_input_time: ", last_input_time)
-
-    # print("time difference: ", time_difference)
-
-    # print("====================================")
-    
+  
     return time_difference < time_interval
 
 
 def clear_queue(queue):
+
+    # print("queue empty: ", queue.empty())
     while not queue.empty():
+        print("clear the queue............................")
         queue.get()
 
 
@@ -177,5 +177,27 @@ def main_for_intent_recognition(sentence, config):
     return prediction_result, matching_result
     
 
+def chat_bot_reply_content(line_bot_api, line_bot, user_id):
+    line_bot_api.push_message(
+        user_id,
+        TextSendMessage(text="請稍等，我將為您換成機器人回覆。")
+    )
+    # line_bot.switch_to_human = False
+    line_bot.user_pool[user_id]["switch_to_human"] = False
+    clear_queue(line_bot.user_pool[user_id]["message_queue"])
+
+    line_bot.user_pool[user_id]["no_reply"] = False
+
+    line_bot.user_pool[user_id]["last_time"] = time.time()
+
+def human_reply_content(line_bot_api, line_bot, user_id):
+    line_bot_api.push_message(user_id, TextSendMessage(text="請稍等，我將為您轉接至客服人員。"))
+
+    line_bot.user_pool[user_id]["switch_to_human"] = True
+    clear_queue(line_bot.user_pool[user_id]["message_queue"])
+
+def error_reply_content(line_bot_api, line_bot, user_id):
+    line_bot_api.push_message(user_id, TextSendMessage(text = "發生錯誤!!"))
+    clear_queue(line_bot.user_pool[user_id]["message_queue"])
 
       
