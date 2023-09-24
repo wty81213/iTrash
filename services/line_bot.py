@@ -111,18 +111,12 @@ def handle_message(event):
 
         # get user message
         mtext = event.message.text
-
-       
-
-        
         if mtext == "機器人回覆":
             chat_bot_reply_content(line_bot_api, line_bot, user_id)
         else:
             # check if the user want to change to human customer service
             if is_change_to_human_customer_service(mtext):
                 human_reply_content(line_bot_api, line_bot, user_id)
-               
-
             
             else:
                 match (mtext):
