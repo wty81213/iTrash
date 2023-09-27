@@ -72,7 +72,7 @@ def is_change_to_human_customer_service(text):
     #  return text == "請稍候，我們將盡速為您服務，不好意思造成您的不便" or "真人客服" in text
 
 
-def is_skip_predict(last_input_time, current_time, time_interval=10):
+def is_skip_predict(last_input_time, current_time, time_interval=7):
     # current_time = time.time()
     
     time_difference = current_time - last_input_time
